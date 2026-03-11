@@ -4,11 +4,19 @@ import { MensajeChat } from "@/lib/types";
 
 type AIProvider = "claude" | "gemini";
 
+function getGoogleKey(): string | undefined {
+  return (
+    process.env.GOOGLE_API_KEY ||
+    process.env.GOOGLE_GEMINI_API_KEY ||
+    process.env.GEMINI_API_KEY
+  );
+}
+
 function getProvider(): AIProvider {
   if (process.env.ANTHROPIC_API_KEY) return "claude";
-  if (process.env.GOOGLE_API_KEY) return "gemini";
+  if (getGoogleKey()) return "gemini";
   throw new Error(
-    "No hay API key de IA configurada. Agrega ANTHROPIC_API_KEY o GOOGLE_API_KEY."
+    "No hay API key de IA configurada. Agrega ANTHROPIC_API_KEY o GOOGLE_API_KEY en Vercel."
   );
 }
 
@@ -49,9 +57,9 @@ export async function streamearConversacion(
   }
 
   // Gemini
-  const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
+  const genAI = new GoogleGenerativeAI(getGoogleKey()!);
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
+    model: "gemini-1.5-flash",
     systemInstruction: systemPrompt,
   });
 
@@ -94,9 +102,9 @@ export async function generarTexto(
   }
 
   // Gemini
-  const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
+  const genAI = new GoogleGenerativeAI(getGoogleKey()!);
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
+    model: "gemini-1.5-flash",
     systemInstruction: systemPrompt,
   });
   const result = await model.generateContent(prompt);

@@ -9,6 +9,7 @@ import { RespuestaEncuesta } from "@/lib/encuesta/preguntas";
 import { Informe } from "@/lib/types";
 
 export async function POST(request: NextRequest) {
+  let paso = "parsing request";
   try {
     const body = await request.json();
     const {
@@ -23,9 +24,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    paso = "generando texto con IA";
     const prompt = construirPromptEncuesta(respuestas);
     const respuesta = await generarTexto(prompt, SYSTEM_PROMPT_INFORME_ENCUESTA);
 
+    paso = "parseando JSON del informe";
     const jsonLimpio = respuesta
       .replace(/```json\n?/g, "")
       .replace(/```\n?/g, "")
@@ -33,6 +36,7 @@ export async function POST(request: NextRequest) {
 
     const informeData = JSON.parse(jsonLimpio);
 
+    paso = "guardando informe en Supabase";
     const supabase = await createClient();
 
     const { data: informe, error } = await supabase
@@ -50,9 +54,10 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      throw new Error(`Error al guardar informe: ${error.message}`);
+      throw new Error(`Supabase insert error: ${error.message} (code: ${error.code})`);
     }
 
+    paso = "actualizando estado de conversación";
     await supabase
       .from("conversaciones")
       .update({ estado: "completada", completada_en: new Date().toISOString() })
@@ -60,7 +65,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ informe: informe as Informe });
   } catch (error) {
-    const errMsg = error instanceof Error ? error.message : "Error interno";
-    return NextResponse.json({ error: errMsg }, { status: 500 });
+    const errMsg = error instanceof Error ? error.message : "Error desconocido";
+    console.error(`[/api/encuesta] Error en paso "${paso}":`, error);
+    return NextResponse.json(
+      { error: errMsg, paso },
+      { status: 500 }
+    );
   }
 }
