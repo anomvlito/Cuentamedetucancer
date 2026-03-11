@@ -99,6 +99,13 @@ export default function PaginaInicio() {
           <p className="text-xs text-slate-400">
             Tu participación es completamente voluntaria
           </p>
+
+          <a
+            href="/medico/login"
+            className="text-xs text-slate-200 hover:text-slate-400 transition-colors mt-4 inline-block"
+          >
+            Acceso profesional
+          </a>
         </div>
       </div>
     );
