@@ -1,18 +1,16 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { SYSTEM_PROMPT_INFORME, construirPromptInforme } from "@/lib/claude/informe";
+import { generarTexto } from "@/lib/ai/provider";
 import { createClient } from "@/lib/supabase/server";
 import { MensajeChat, Informe } from "@/lib/types";
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { conversacion_id, historial }: { conversacion_id: string; historial: MensajeChat[] } =
-      body;
+    const {
+      conversacion_id,
+      historial,
+    }: { conversacion_id: string; historial: MensajeChat[] } = body;
 
     if (!conversacion_id || !historial?.length) {
       return NextResponse.json(
@@ -22,21 +20,10 @@ export async function POST(request: NextRequest) {
     }
 
     const prompt = construirPromptInforme(historial);
-
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 2048,
-      system: SYSTEM_PROMPT_INFORME,
-      messages: [{ role: "user", content: prompt }],
-    });
-
-    const contenido = response.content[0];
-    if (contenido.type !== "text") {
-      throw new Error("Respuesta inesperada del modelo");
-    }
+    const respuesta = await generarTexto(prompt, SYSTEM_PROMPT_INFORME);
 
     // Limpiar posibles bloques de código markdown del JSON
-    const jsonLimpio = contenido.text
+    const jsonLimpio = respuesta
       .replace(/```json\n?/g, "")
       .replace(/```\n?/g, "")
       .trim();
