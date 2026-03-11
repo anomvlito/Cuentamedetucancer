@@ -59,7 +59,7 @@ export async function streamearConversacion(
   // Gemini
   const genAI = new GoogleGenerativeAI(getGoogleKey()!);
   const model = genAI.getGenerativeModel({
-    model: "gemini-1.5-flash",
+    model: "gemini-2.5-flash",
     systemInstruction: systemPrompt,
   });
 
@@ -104,7 +104,7 @@ export async function generarTexto(
   // Gemini
   const genAI = new GoogleGenerativeAI(getGoogleKey()!);
   const model = genAI.getGenerativeModel({
-    model: "gemini-1.5-flash",
+    model: "gemini-2.5-flash",
     systemInstruction: systemPrompt,
   });
   const result = await model.generateContent(prompt);
